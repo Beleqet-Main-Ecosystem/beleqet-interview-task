@@ -24,9 +24,9 @@ Building the frontend for the Beleqet Platform (Jobs Board + Freelance Marketpla
 
 | # | Task | Branch | Priority | Status |
 |---|------|--------|----------|--------|
-| 2.1 | Connect Jobs listing to API | `feature/jobs-api` | HIGH | ⏳ |
-| 2.2 | Connect Job detail to API | `feature/job-detail-api` | HIGH | ⏳ |
-| 2.3 | Connect Job search/filter to API | `feature/jobs-search` | HIGH | ⏳ |
+| 2.1 | Connect Jobs listing to API | `feature/jobs-api` | HIGH | ✅ |
+| 2.2 | Connect Job detail to API | `feature/job-detail-api` | HIGH | ✅ |
+| 2.3 | Connect Job search/filter to API | `feature/jobs-search` | HIGH | ✅ |
 | 2.4 | Build Post Job page (Employer) | `feature/post-job` | MEDIUM | ⏳ |
 | 2.5 | Build Job Categories component | `feature/job-categories` | MEDIUM | ⏳ |
 
@@ -102,14 +102,14 @@ Building the frontend for the Beleqet Platform (Jobs Board + Freelance Marketpla
 | Phase | Tasks | Completed |
 |-------|-------|-----------|
 | Phase 1: Foundation | 8 | 8 |
-| Phase 2: Jobs | 5 | 0 |
+| Phase 2: Jobs | 5 | 3 |
 | Phase 3: Applications | 3 | 0 |
 | Phase 4: Freelance | 7 | 0 |
 | Phase 5: Dashboards | 4 | 0 |
 | Phase 6: Escrow & Wallet | 4 | 0 |
 | Phase 7: Disputes | 2 | 0 |
 | Phase 8: Polish & Testing | 3 | 0 |
-| **Total** | **36** | **8** |
+| **Total** | **36** | **11** |
 
 ---
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, CheckCircle } from "lucide-react";
 
 const roles = [
   { value: "JOB_SEEKER", label: "Job Seeker", desc: "Find and apply to jobs" },
@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const [role, setRole] = useState("JOB_SEEKER");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,12 +32,45 @@ export default function RegisterPage() {
 
     try {
       await register({ firstName, lastName, email, password, role });
-      router.push("/");
+      setRegistered(true);
     } catch (err: any) {
       setError(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
+  }
+
+  if (registered) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-pageBg">
+        <div className="w-full max-w-md text-center">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-success/10 mb-6">
+            <CheckCircle className="h-8 w-8 text-success" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-ink">Check your email</h1>
+          <p className="text-muted mt-3">
+            We sent a verification link to <span className="font-semibold text-ink">{email}</span>
+          </p>
+          <p className="text-sm text-muted mt-2">
+            Click the link in the email to verify your account. You can close this page.
+          </p>
+          <div className="mt-8 space-y-3">
+            <Link
+              href="/login"
+              className="block w-full rounded-xl bg-brandGreen py-3 text-sm font-semibold text-white hover:bg-darkGreen transition-colors"
+            >
+              Go to Login
+            </Link>
+            <Link
+              href="/"
+              className="block w-full rounded-xl border border-border py-3 text-sm font-semibold text-ink hover:bg-pageBg transition-colors"
+            >
+              Go to Homepage
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

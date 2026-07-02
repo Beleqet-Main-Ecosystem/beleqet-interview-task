@@ -9,6 +9,7 @@ type User = {
   firstName: string;
   lastName: string;
   role: string;
+  emailVerified?: boolean;
 };
 
 type AuthContextType = {
@@ -19,6 +20,7 @@ type AuthContextType = {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  resendVerification: () => Promise<void>;
 };
 
 type RegisterData = {
@@ -80,9 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const userData = await api.get<User>("/auth/me", currentToken);
+      const userData = await api.get<User>("/users/profile", currentToken);
       setUser(userData);
       setToken(currentToken);
+      localStorage.setItem("user", JSON.stringify(userData));
     } catch {
       logout();
     } finally {
@@ -123,8 +126,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("user", JSON.stringify(res.user));
   }
 
+  async function resendVerification() {
+    throw new Error("Email verification not configured on this server");
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser, resendVerification }}>
       {children}
     </AuthContext.Provider>
   );

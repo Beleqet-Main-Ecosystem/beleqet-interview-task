@@ -36,7 +36,7 @@ export class AuthService {
         lastName: dto.lastName,
         role: dto.role ?? 'JOB_SEEKER',
       },
-      select: { id: true, email: true, firstName: true, lastName: true, role: true },
+      select: { id: true, email: true, firstName: true, lastName: true, role: true, emailVerified: true },
     });
 
     this.logger.log(`New user registered: ${user.email} (${user.role})`);
@@ -59,7 +59,7 @@ export class AuthService {
     return user;
   }
 
-  async login(user: { id: string; email: string; firstName: string; lastName: string; role: string }) {
+  async login(user: { id: string; email: string; firstName: string; lastName: string; role: string; emailVerified?: boolean }) {
     return this.issueTokens(user);
   }
 
@@ -161,7 +161,7 @@ export class AuthService {
     return { success: true, message: 'Password reset successfully' };
   }
 
-  private async issueTokens(user: { id: string; email: string; firstName: string; lastName: string; role: string }) {
+  private async issueTokens(user: { id: string; email: string; firstName: string; lastName: string; role: string; emailVerified?: boolean }) {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
     const accessToken = this.jwt.sign(payload, {
@@ -198,6 +198,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        emailVerified: user.emailVerified ?? false,
       },
     };
   }

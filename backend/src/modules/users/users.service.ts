@@ -11,7 +11,7 @@ export class UsersService {
       where: { id },
       select: { 
         id: true, email: true, firstName: true, lastName: true, role: true, 
-        avatarUrl: true, phone: true, telegramId: true, createdAt: true, 
+        avatarUrl: true, phone: true, telegramId: true, emailVerified: true, createdAt: true, 
         company: true, headline: true, bio: true, location: true, 
         defaultResumeUrl: true, portfolioUrl: true, githubUrl: true, 
         linkedinUrl: true, skills: true 
@@ -27,7 +27,7 @@ export class UsersService {
       data: dto,
       select: { 
         id: true, email: true, firstName: true, lastName: true, role: true, 
-        avatarUrl: true, phone: true, telegramId: true, createdAt: true, 
+        avatarUrl: true, phone: true, telegramId: true, emailVerified: true, createdAt: true, 
         company: true, headline: true, bio: true, location: true, 
         defaultResumeUrl: true, portfolioUrl: true, githubUrl: true, 
         linkedinUrl: true, skills: true 
