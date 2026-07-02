@@ -1,17 +1,63 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Clock, Building2, ArrowLeft } from "lucide-react";
-import { jobs } from "@/lib/mockData";
+import { MapPin, Clock, Building2, ArrowLeft, Loader2, Briefcase, DollarSign } from "lucide-react";
+import { api } from "@/lib/api";
+import type { Job } from "@/lib/types";
 
-export function generateStaticParams() {
-  return jobs.map((job) => ({ id: job.id }));
-}
+const typeLabels: Record<string, string> = {
+  FULL_TIME: "Full Time",
+  PART_TIME: "Part Time",
+  REMOTE: "Remote",
+  HYBRID: "Hybrid",
+  CONTRACT: "Contract",
+};
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
-  const job = jobs.find((j) => j.id === params.id);
-  if (!job) notFound();
+export default function JobDetailPage() {
+  const params = useParams();
+  const [job, setJob] = useState<Job | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const related = jobs.filter((j) => j.category === job.category && j.id !== job.id).slice(0, 3);
+  useEffect(() => {
+    async function fetchJob() {
+      try {
+        const data = await api.get<Job>(`/jobs/${params.id}`);
+        setJob(data);
+      } catch (err: any) {
+        setError(err.message || "Job not found");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchJob();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="container-page py-10">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 text-brandGreen animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="container-page py-10">
+        <Link href="/jobs" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-brandGreen mb-6">
+          <ArrowLeft className="h-4 w-4" /> Back to all jobs
+        </Link>
+        <div className="rounded-2xl border border-border bg-white p-12 text-center">
+          <p className="text-ink font-semibold">Job not found</p>
+          <p className="text-sm text-muted mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-page py-10">
@@ -28,27 +74,32 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               </span>
               <div>
                 <h1 className="text-xl sm:text-2xl font-extrabold text-ink leading-snug">{job.title}</h1>
-                <p className="text-muted mt-1">{job.company}</p>
+                <p className="text-muted mt-1">{job.company?.name || "Company"}</p>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted">
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> {job.location}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> {job.postedAgo}
+                    <Clock className="h-3.5 w-3.5" /> {new Date(job.createdAt).toLocaleDateString()}
                   </span>
-                  <span className="rounded-full bg-brandGreen/10 text-brandGreen font-semibold px-2.5 py-1">
-                    {job.type}
+                  <span className="flex items-center gap-1">
+                    <Briefcase className="h-3.5 w-3.5" /> {typeLabels[job.type] || job.type}
                   </span>
+                  {job.salaryMin && job.salaryMax && (
+                    <span className="flex items-center gap-1">
+                      <DollarSign className="h-3.5 w-3.5" /> {job.salaryMin.toLocaleString()} - {job.salaryMax.toLocaleString()} {job.currency || "ETB"}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="mt-7 pt-7 border-t border-border">
               <h2 className="text-sm font-semibold text-ink mb-3">Job Description</h2>
-              <p className="text-sm text-muted leading-relaxed">{job.description}</p>
+              <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">{job.description}</p>
             </div>
 
-            {job.tags && (
+            {job.tags && job.tags.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2">
                 {job.tags.map((tag) => (
                   <span key={tag} className="text-xs font-medium text-muted bg-pageBg border border-border rounded-full px-3 py-1">
@@ -70,23 +121,29 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
             </button>
           </div>
 
-          {related.length > 0 && (
-            <div className="rounded-2xl border border-border bg-white p-6">
-              <h3 className="text-sm font-semibold text-ink mb-4">Similar Jobs</h3>
-              <div className="space-y-3">
-                {related.map((r) => (
-                  <Link
-                    key={r.id}
-                    href={`/jobs/${r.id}`}
-                    className="block rounded-lg hover:bg-pageBg p-2 -mx-2 transition-colors"
-                  >
-                    <p className="text-sm font-semibold text-ink line-clamp-1">{r.title}</p>
-                    <p className="text-xs text-muted mt-0.5">{r.company} · {r.location}</p>
-                  </Link>
-                ))}
+          <div className="rounded-2xl border border-border bg-white p-6">
+            <h3 className="text-sm font-semibold text-ink mb-4">Job Details</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted">Category</span>
+                <span className="text-ink font-medium">{job.category?.name || "N/A"}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted">Type</span>
+                <span className="text-ink font-medium">{typeLabels[job.type] || job.type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">Location</span>
+                <span className="text-ink font-medium">{job.location}</span>
+              </div>
+              {job.salaryMin && job.salaryMax && (
+                <div className="flex justify-between">
+                  <span className="text-muted">Salary</span>
+                  <span className="text-ink font-medium">{job.salaryMin.toLocaleString()} - {job.salaryMax.toLocaleString()} {job.currency || "ETB"}</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </aside>
       </div>
     </div>
