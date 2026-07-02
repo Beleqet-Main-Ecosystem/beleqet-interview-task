@@ -79,7 +79,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  const logger = new Logger('Bootstrap');
-  logger.error('Fatal startup error', err);
+  console.error('FATAL STARTUP ERROR:', err);
   process.exit(1);
 });
