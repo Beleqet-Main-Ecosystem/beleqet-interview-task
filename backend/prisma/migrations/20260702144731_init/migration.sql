@@ -1,4 +1,4 @@
--- CreateEnum
+﻿-- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'EMPLOYER', 'JOB_SEEKER', 'FREELANCER');
 
 -- CreateEnum
@@ -53,7 +53,7 @@ CREATE TABLE "users" (
     "linkedinUrl" TEXT,
     "location" TEXT,
     "portfolioUrl" TEXT,
-    "skills" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "skills" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -94,7 +94,7 @@ CREATE TABLE "companies" (
     "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "benefits" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "benefits" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "coverImageUrl" TEXT,
     "facebookUrl" TEXT,
     "foundedYear" INTEGER,
@@ -146,7 +146,7 @@ CREATE TABLE "jobs" (
     "jobSite" TEXT,
     "qualification" TEXT,
     "salaryType" TEXT,
-    "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "tags" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "urgent" BOOLEAN NOT NULL DEFAULT false,
     "vacancies" INTEGER DEFAULT 1,
     "yearsOfExperience" TEXT,
@@ -160,7 +160,7 @@ CREATE TABLE "job_questions" (
     "jobId" TEXT NOT NULL,
     "question" TEXT NOT NULL,
     "type" TEXT NOT NULL DEFAULT 'TEXT',
-    "options" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "options" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "required" BOOLEAN NOT NULL DEFAULT false,
     "order" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -226,12 +226,12 @@ CREATE TABLE "freelance_jobs" (
     "currency" TEXT NOT NULL DEFAULT 'ETB',
     "pricingType" TEXT NOT NULL DEFAULT 'FIXED',
     "deadlineDays" INTEGER NOT NULL,
-    "skills" TEXT[],
+    "skills" TEXT[] NOT NULL,
     "status" "FreelanceJobStatus" NOT NULL DEFAULT 'DRAFT',
     "featured" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "attachments" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "attachments" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "experienceLevel" TEXT,
     "locationPreference" TEXT,
 
@@ -347,7 +347,7 @@ CREATE TABLE "disputes" (
     "contractId" TEXT NOT NULL,
     "raisedById" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
-    "evidenceUrls" TEXT[],
+    "evidenceUrls" TEXT[] NOT NULL,
     "resolution" TEXT,
     "resolvedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
