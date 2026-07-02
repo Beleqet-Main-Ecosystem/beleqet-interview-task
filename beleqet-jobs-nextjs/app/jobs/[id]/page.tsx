@@ -1,17 +1,71 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Clock, Building2, ArrowLeft } from "lucide-react";
-import { jobs } from "@/lib/mockData";
 
-export function generateStaticParams() {
-  return jobs.map((job) => ({ id: job.id }));
+interface PageProps {
+  params: Promise<{ id: string }>;
 }
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
-  const job = jobs.find((j) => j.id === params.id);
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  requirements: string[];
+  location: string;
+  jobType: string;
+  salaryMin: number;
+  salaryMax: number;
+  categoryId: string;
+  company?: {
+    name: string;
+    logoUrl?: string;
+  };
+  createdAt?: string;
+}
+
+// Fetch the main job details from NestJS
+async function getJob(id: string): Promise<Job | null> {
+  try {
+    const res = await fetch(`http://localhost:4000/api/v1/jobs/${id}`, {
+      next: { revalidate: 60 }, // Cache and revalidate data every 60 seconds (ISR)
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching job data:", error);
+    return null;
+  }
+}
+
+// Fetch similar jobs based on the category
+async function getRelatedJobs(categoryId: string, currentJobId: string): Promise<Job[]> {
+  try {
+    const res = await fetch(`http://localhost:4000/api/v1/jobs?category=${categoryId}&limit=4`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const fetchedJobs = Array.isArray(data) ? data : data.data || [];
+    
+    return fetchedJobs.filter((j: Job) => j.id !== currentJobId).slice(0, 3);
+  } catch (error) {
+    console.error("Error fetching related jobs:", error);
+    return [];
+  }
+}
+
+export default async function JobDetailPage({ params }: PageProps) {
+  const { id } = await params;
+  const job = await getJob(id);
+
   if (!job) notFound();
 
-  const related = jobs.filter((j) => j.category === job.category && j.id !== job.id).slice(0, 3);
+  // Dynamically fetch similar jobs based on the current job's categoryId
+  const related = await getRelatedJobs(job.categoryId, job.id);
+
+  // Formatting helper for enum types
+  const displayType = job.jobType ? job.jobType.replace("_", " ") : "Full Time";
+  const displayCompany = typeof job.company === "object" ? job.company?.name : "Verified Employer";
 
   return (
     <div className="container-page py-10">
@@ -28,16 +82,16 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               </span>
               <div>
                 <h1 className="text-xl sm:text-2xl font-extrabold text-ink leading-snug">{job.title}</h1>
-                <p className="text-muted mt-1">{job.company}</p>
+                <p className="text-muted mt-1">{displayCompany}</p>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted">
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> {job.location}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> {job.postedAgo}
+                    <Clock className="h-3.5 w-3.5" /> Just now
                   </span>
-                  <span className="rounded-full bg-brandGreen/10 text-brandGreen font-semibold px-2.5 py-1">
-                    {job.type}
+                  <span className="rounded-full bg-brandGreen/10 text-brandGreen font-semibold px-2.5 py-1 capitalize">
+                    {displayType.toLowerCase()}
                   </span>
                 </div>
               </div>
@@ -45,16 +99,19 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
             <div className="mt-7 pt-7 border-t border-border">
               <h2 className="text-sm font-semibold text-ink mb-3">Job Description</h2>
-              <p className="text-sm text-muted leading-relaxed">{job.description}</p>
+              <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{job.description}</p>
             </div>
 
-            {job.tags && (
-              <div className="mt-6 flex flex-wrap gap-2">
-                {job.tags.map((tag) => (
-                  <span key={tag} className="text-xs font-medium text-muted bg-pageBg border border-border rounded-full px-3 py-1">
-                    {tag}
-                  </span>
-                ))}
+            {job.requirements && job.requirements.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-border">
+                <h2 className="text-sm font-semibold text-ink mb-3">Requirements</h2>
+                <div className="flex flex-wrap gap-2">
+                  {job.requirements.map((req) => (
+                    <span key={req} className="text-xs font-medium text-muted bg-pageBg border border-border rounded-full px-3 py-1">
+                      {req}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -74,16 +131,19 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
             <div className="rounded-2xl border border-border bg-white p-6">
               <h3 className="text-sm font-semibold text-ink mb-4">Similar Jobs</h3>
               <div className="space-y-3">
-                {related.map((r) => (
-                  <Link
-                    key={r.id}
-                    href={`/jobs/${r.id}`}
-                    className="block rounded-lg hover:bg-pageBg p-2 -mx-2 transition-colors"
-                  >
-                    <p className="text-sm font-semibold text-ink line-clamp-1">{r.title}</p>
-                    <p className="text-xs text-muted mt-0.5">{r.company} · {r.location}</p>
-                  </Link>
-                ))}
+                {related.map((r) => {
+                  const rCompany = typeof r.company === "object" ? r.company?.name : "Verified Employer";
+                  return (
+                    <Link
+                      key={r.id}
+                      href={`/jobs/${r.id}`}
+                      className="block rounded-lg hover:bg-pageBg p-2 -mx-2 transition-colors"
+                    >
+                      <p className="text-sm font-semibold text-ink line-clamp-1">{r.title}</p>
+                      <p className="text-xs text-muted mt-0.5">{rCompany} · {r.location}</p>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
