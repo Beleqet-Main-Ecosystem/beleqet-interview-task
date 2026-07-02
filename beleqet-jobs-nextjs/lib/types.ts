@@ -52,3 +52,66 @@ export type PaginatedResponse<T> = {
   limit: number;
   totalPages: number;
 };
+
+export type ApplicationStatus =
+  | "SUBMITTED"
+  | "SCREENING"
+  | "SHORTLISTED"
+  | "INTERVIEW_SCHEDULED"
+  | "OFFERED"
+  | "REJECTED"
+  | "WITHDRAWN";
+
+export type CandidateScore = {
+  id: string;
+  applicationId: string;
+  overallScore: number;
+  skillScore: number;
+  experienceScore: number;
+  cultureFitScore?: number;
+  reasoning?: string;
+  scoredAt: string;
+};
+
+export type Application = {
+  id: string;
+  jobId: string;
+  userId: string;
+  coverLetter?: string;
+  resumeUrl?: string;
+  status: ApplicationStatus;
+  interviewSlot?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  expectedSalary?: number;
+  portfolioUrl?: string;
+  screeningAnswers?: Record<string, unknown>;
+  job?: {
+    id: string;
+    title: string;
+    companyId: string;
+    company?: { id: string; name: string; logoUrl?: string };
+    location?: string;
+    type?: string;
+  };
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  score?: CandidateScore;
+};
+
+export type CreateApplicationInput = {
+  jobId: string;
+  coverLetter?: string;
+  resumeUrl?: string;
+  portfolioUrl?: string;
+  expectedSalary?: number;
+};
+
+export type UpdateApplicationStatusInput = {
+  status: ApplicationStatus;
+};

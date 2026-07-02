@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Clock, Building2, ArrowLeft, Loader2, Briefcase, DollarSign } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { Job } from "@/lib/types";
 
 const typeLabels: Record<string, string> = {
@@ -17,9 +18,19 @@ const typeLabels: Record<string, string> = {
 
 export default function JobDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  function handleApply() {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    router.push(`/jobs/${params.id}/apply`);
+  }
 
   useEffect(() => {
     async function fetchJob() {
@@ -113,7 +124,10 @@ export default function JobDetailPage() {
 
         <aside className="space-y-6">
           <div className="rounded-2xl border border-border bg-white p-6">
-            <button className="w-full rounded-full bg-brandGreen text-white text-sm font-semibold py-3 hover:bg-darkGreen transition-colors">
+            <button
+              onClick={handleApply}
+              className="w-full rounded-full bg-brandGreen text-white text-sm font-semibold py-3 hover:bg-darkGreen transition-colors"
+            >
               Apply Now
             </button>
             <button className="w-full rounded-full border border-border text-ink text-sm font-semibold py-3 mt-2 hover:bg-pageBg transition-colors">
