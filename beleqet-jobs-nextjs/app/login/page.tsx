@@ -34,14 +34,6 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 bg-pageBg">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 font-extrabold text-2xl text-primary mb-4">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brandGreen text-white text-lg">
-              B
-            </span>
-            <span>
-              Beleqet <span className="text-brandGreen">Jobs</span>
-            </span>
-          </Link>
           <h1 className="text-3xl font-extrabold text-ink mt-4">Welcome back</h1>
           <p className="text-muted mt-2">Sign in to your Beleqet account</p>
         </div>

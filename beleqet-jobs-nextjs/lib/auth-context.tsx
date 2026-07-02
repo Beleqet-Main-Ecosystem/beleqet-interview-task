@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { api } from "./api";
 
 type User = {
@@ -18,6 +18,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 };
 
 type RegisterData = {
@@ -30,20 +31,81 @@ type RegisterData = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function parseJWT(token: string): { exp: number } | null {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
+function getTokenExpiration(token: string): number | null {
+  const payload = parseJWT(token);
+  if (!payload || !payload.exp) return null;
+  return payload.exp * 1000;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   }, []);
+
+  const refreshUser = useCallback(async () => {
+    const currentToken = localStorage.getItem("token");
+    if (!currentToken) {
+      setIsLoading(false);
+      return;
+    }
+
+    const expiration = getTokenExpiration(currentToken);
+    if (expiration && Date.now() >= expiration) {
+      logout();
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const userData = await api.get<User>("/auth/me", currentToken);
+      setUser(userData);
+      setToken(currentToken);
+    } catch {
+      logout();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [logout]);
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const expiration = getTokenExpiration(token);
+    if (!expiration) return;
+
+    const timeout = setTimeout(() => {
+      logout();
+    }, expiration - Date.now() - 60000);
+
+    return () => clearTimeout(timeout);
+  }, [token, logout]);
 
   async function login(email: string, password: string) {
     const res = await api.post<{ accessToken: string; user: User }>("/auth/login", { email, password });
@@ -61,15 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("user", JSON.stringify(res.user));
   }
 
-  function logout() {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-  }
-
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

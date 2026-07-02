@@ -37,9 +37,11 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <span className="text-sm text-muted hidden sm:inline">
-                {user.firstName}
-              </span>
+              <Link href="dashboard/profile">
+                <span className="text-sm text-muted hidden sm:inline">
+                  {user.firstName}
+                </span>
+              </Link>
               <button
                 onClick={logout}
                 className="text-sm font-medium text-ink hover:text-brandGreen transition-colors"
