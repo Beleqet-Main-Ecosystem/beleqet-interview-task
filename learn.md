@@ -4,6 +4,64 @@ This file documents everything we learn as we work through the project. Each ent
 
 ---
 
+## Current Status (Updated 2026-07-02)
+
+### What's Running
+- ✅ Backend API: http://localhost:4000/api/v1 (Docker)
+- ✅ Frontend: http://localhost:3000 (npm run dev)
+- ✅ PostgreSQL + Redis: Running in Docker
+
+### What's Built (Frontend)
+| Module | Pages | Status |
+|--------|-------|--------|
+| Auth | Login, Register, Forgot Password, Reset Password, Verify Email, Profile, Edit Profile | ✅ Done |
+| Jobs | Jobs listing (API connected), Job detail (API connected), Featured jobs (API connected) | ✅ Done |
+| Freelance | — | ❌ Not started |
+| Dashboards | — | ❌ Not started |
+| Escrow/Wallet | — | ❌ Not started |
+
+### What's Left to Build
+| Phase | Tasks | Priority |
+|-------|-------|----------|
+| Phase 2: Jobs | Post Job page, Job Categories | MEDIUM |
+| Phase 3: Applications | Apply form, My Applications, Applicant List | HIGH |
+| Phase 4: Freelance | Browse Gigs, Gig Detail, Post Gig, Bids, Contracts | MEDIUM |
+| Phase 5: Dashboards | Employer, Freelancer, Admin | MEDIUM |
+| Phase 6: Escrow/Wallet | Wallet, Escrow flow, Withdrawal, Transactions | LOW |
+| Phase 7: Disputes | Raise Dispute, Admin Resolution | LOW |
+| Phase 8: Polish | Error handling, Responsive, E2E testing | HIGH |
+
+### Git Status
+- Current branch: `main`
+- Last commit: `feat: add email verification flow with banner`
+- Remote: https://github.com/bilalshemsu1/beleqet-interview-task
+
+### How to Start Next Time
+1. Read this file (learn.md) — understand current status
+2. Read context.md — understand the project
+3. Read plan.md — see what's left to build
+4. Run `docker compose up -d` in `backend/` — start API
+5. Run `npm run dev` in `beleqet-jobs-nextjs/` — start frontend
+6. Continue building from the next unfinished task
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `context.md` | Project overview, architecture, assessment status |
+| `plan.md` | Full project plan (36 tasks across 8 phases) |
+| `learn.md` | This file — learning log + current status |
+| `beleqet-jobs-nextjs/lib/api.ts` | API client for backend |
+| `beleqet-jobs-nextjs/lib/auth-context.tsx` | Auth state management |
+| `beleqet-jobs-nextjs/lib/types.ts` | TypeScript types |
+| `beleqet-jobs-nextjs/components/ProtectedRoute.tsx` | Auth guard |
+| `beleqet-jobs-nextjs/components/RoleGate.tsx` | Role-based access |
+
+### Auth Contract Note
+- Frontend auth hydration should use `GET /users/profile`, not `GET /auth/me`, because `/auth/me` only returns JWT identity fields (`userId`, `email`, `role`).
+- The profile payload must include `emailVerified` so the email verification banner and auth state stay accurate after refresh.
+
+---
+
 ## Workflow Pattern
 
 For every task we follow:
@@ -28,6 +86,7 @@ For every task we follow:
 | 08 | Running the Frontend | [Frontend Setup](#08-running-the-frontend) | ✅ Done |
 | 09 | Git Workflow | [Git & Branch Protection](#09-git-workflow--branch-protection) | ✅ Done |
 | 10 | Auth System | [Full Stack Auth](#10-authentication-system-full-stack) | ✅ Done |
+| 11 | Database Access | [Database & Seeding](#11-database-access--seeding) | ✅ Done |
 
 ---
 
@@ -627,10 +686,117 @@ const { user, token, login, logout } = useAuth();
 - [x] Forgot password flow
 - [x] Reset password flow
 - [x] Email verification page
+- [x] Email verification banner
+- [x] Resend verification email
 - [x] Profile view page
 - [x] Profile edit page
 - [x] Token refresh logic
 - [x] Auto-logout on expiry
+
+---
+
+## 11. Database Access & Seeding
+
+> **Status:** ✅ Learned
+> **When:** After setting up Docker containers
+
+### What We Learned
+How to access PostgreSQL data running in Docker and seed the database with initial data.
+
+### Access Methods
+
+**1. Docker exec (command line):**
+```bash
+# List all tables
+docker exec beleqet-postgres psql -U beleqet_user -d beleqet_db -c "\dt"
+
+# View all data in a table
+docker exec beleqet-postgres psql -U beleqet_user -d beleqet_db -c "SELECT * FROM users;"
+
+# Run custom SQL
+docker exec beleqet-postgres psql -U beleqet_user -d beleqet_db -c "SELECT COUNT(*) FROM jobs;"
+```
+
+**2. Prisma Studio (visual):**
+```bash
+# From backend directory
+cd backend
+npx prisma studio
+# Opens at http://localhost:5555
+```
+
+**3. GUI Tools (DBeaver, pgAdmin, TablePlus):**
+| Field | Value |
+|-------|-------|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `beleqet_db` |
+| User | `beleqet_user` |
+| Password | `your_password` |
+
+### Database Credentials
+From `backend/docker-compose.yml`:
+```yaml
+POSTGRES_USER: beleqet_user
+POSTGRES_PASSWORD: your_password
+POSTGRES_DB: beleqet_db
+```
+
+### Seeding the Database
+
+**Method 1: Via Docker exec (recommended):**
+```bash
+docker exec beleqet-backend npx tsx prisma/seed.ts
+```
+
+**Method 2: Via package.json script:**
+```bash
+docker exec beleqet-backend npm run prisma:seed
+```
+
+### Seed Script Location
+`backend/prisma/seed.ts` — creates:
+- 54 job categories
+- 5 freelance categories
+
+### Key Tables
+| Table | Purpose |
+|-------|---------|
+| users | All users (job seekers, employers, freelancers, admins) |
+| jobs | Job listings |
+| job_categories | 54 job categories |
+| applications | Job applications |
+| freelance_jobs | Freelance gigs |
+| freelance_categories | 5 freelance categories |
+| bids | Freelance bids/proposals |
+| contracts | Freelance contracts |
+| escrow_transactions | BeleqetSafe payments |
+| freelancer_wallets | Freelancer balances |
+| notifications | User notifications |
+
+### Common SQL Commands
+```sql
+-- Count users
+SELECT COUNT(*) FROM users;
+
+-- List all job seekers
+SELECT * FROM users WHERE role = 'JOB_SEEKER';
+
+-- List all jobs with company
+SELECT j.title, j.location, c.name as company 
+FROM jobs j 
+LEFT JOIN companies c ON j."companyId" = c.id;
+
+-- Check categories
+SELECT * FROM job_categories ORDER BY label;
+```
+
+### Checklist
+- [x] Access database via Docker exec
+- [x] Access database via Prisma Studio
+- [x] Access database via GUI tools
+- [x] Seed database with categories
+- [x] Understand table structure
 
 ---
 

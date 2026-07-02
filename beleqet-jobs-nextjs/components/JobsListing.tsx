@@ -136,10 +136,7 @@ export default function JobsListing() {
                     category === cat.id ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
                   }`}
                 >
-                  <span>{cat.name}</span>
-                  {cat._count && (
-                    <span className="text-xs">{cat._count.jobs}</span>
-                  )}
+                  <span>{cat.label}</span>
                 </button>
               ))}
             </div>

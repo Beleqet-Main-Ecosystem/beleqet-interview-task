@@ -19,7 +19,9 @@ export type Job = {
   };
   category?: {
     id: string;
-    name: string;
+    slug: string;
+    label: string;
+    icon?: string;
   };
   employer?: {
     id: string;
@@ -30,10 +32,17 @@ export type Job = {
 
 export type JobCategory = {
   id: string;
-  name: string;
-  _count?: {
-    jobs: number;
-  };
+  slug: string;
+  label: string;
+  icon?: string;
+};
+
+export type CreateJobInput = {
+  title: string;
+  description: string;
+  location: string;
+  type: "FULL_TIME" | "PART_TIME" | "REMOTE" | "HYBRID" | "CONTRACT";
+  categoryId: string;
 };
 
 export type PaginatedResponse<T> = {

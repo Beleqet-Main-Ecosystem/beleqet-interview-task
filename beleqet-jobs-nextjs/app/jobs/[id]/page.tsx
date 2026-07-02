@@ -126,7 +126,7 @@ export default function JobDetailPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted">Category</span>
-                <span className="text-ink font-medium">{job.category?.name || "N/A"}</span>
+                <span className="text-ink font-medium">{job.category?.label || "N/A"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted">Type</span>

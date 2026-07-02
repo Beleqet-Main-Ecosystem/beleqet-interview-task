@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/lib/auth-context";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 export const metadata: Metadata = {
   title: "Beleqet Jobs | Find Your Next Opportunity Faster",
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <AuthProvider>
           <Header />
+          <EmailVerificationBanner />
           <main>{children}</main>
           <Footer />
         </AuthProvider>

@@ -137,9 +137,14 @@ POST /escrow/callback (webhook)
 - ✅ API verified at http://localhost:4000/api/v1
 - ✅ Swagger UI verified at http://localhost:4000/api/docs
 - ✅ Endpoints tested: GET /jobs, GET /freelance/jobs, GET /api/docs
-- ❌ Frontend not connected to real API
-- ❌ Minimal test coverage (5 spec files, basic tests)
-- ❌ No production deployment
+- ✅ Frontend connected to real API (Jobs listing, Job detail, Featured jobs)
+- ✅ Auth system complete (Login, Register, Profile, Email verification)
+- ✅ Auth hydration now uses `/users/profile` so profile state includes `emailVerified`
+- ✅ Database seeded (54 job categories, 5 freelance categories)
+- ❌ Jobs table empty (needs employer to create jobs)
+- ❌ Freelance section not built yet
+- ❌ Dashboards not built yet
+- ❌ Escrow/Wallet UI not built yet
 
 ## Assessment Task Status
 | Step | Status | Notes |
@@ -165,6 +170,13 @@ Frontend
 Service         Status    URL
 beleqet-nextjs  ✅ Running  http://localhost:3000
 .env.local      ✅ Set      NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+
+Database
+Table           Rows  Notes
+users           5     Registered users
+jobs            0     Empty (no jobs yet)
+job_categories  54    Seeded
+freelance_categories 5 Seeded
 ```
 
 ## What to Do Next
