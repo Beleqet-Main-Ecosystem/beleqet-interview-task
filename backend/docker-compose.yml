@@ -6,11 +6,11 @@ services:
     container_name: beleqet-postgres
     restart: always
     environment:
-      POSTGRES_USER: beleqet_user
-      POSTGRES_PASSWORD: your_password
-      POSTGRES_DB: beleqet_db
+      POSTGRES_USER: ${POSTGRES_USER:-beleqet_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_password}
+      POSTGRES_DB: ${POSTGRES_DB:-beleqet_db}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
