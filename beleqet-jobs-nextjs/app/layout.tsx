@@ -2,13 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
-// Using Inter via next/font/google requires network access to Google Fonts at
-// build time. If your deployment environment can reach fonts.googleapis.com,
-// swap this back to:
-//   import { Inter } from "next/font/google";
-//   const inter = Inter({ subsets: ["latin"], variable: "--font-inter", weight: ["400","500","600","700","800"] });
-// and add inter.variable to the <html> className below.
+import { AuthProvider } from "@/lib/auth-context";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 export const metadata: Metadata = {
   title: "Beleqet Jobs | Find Your Next Opportunity Faster",
@@ -24,9 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <Header />
-        <main>{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Header />
+          <EmailVerificationBanner />
+          <main>{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
