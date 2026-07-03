@@ -11,6 +11,15 @@ export const QUEUE_NAMES = {
   WALLET:        'wallet',
   SEARCH_INDEX:  'search-index',
   SCHEDULED:     'scheduled',
+  ALERTS:        'job-alerts',
+  REFERRALS:     'referrals',
+} as const;
+
+// ── Job Alert jobs ────────────────────────────────────────────────────────
+
+export const ALERT_JOBS = {
+  DISPATCH_ALERTS: 'dispatch-job-alerts',
+  SEND_ALERT_EMAIL: 'send-alert-email',
 } as const;
 
 // ── Application workflow jobs ─────────────────────────────────────────────
@@ -44,6 +53,28 @@ export const ESCROW_JOBS = {
   PROCESS_WEBHOOK:    'process-payment-webhook',
   AUTO_RELEASE:       'auto-release-milestone',  // 14-day auto-approval
   PROCESS_WITHDRAWAL: 'process-wallet-withdrawal',
+} as const;
+
+// ── Referral jobs ─────────────────────────────────────────────────────────
+
+export const REFERRAL_JOBS = {
+  VALIDATE_REFERRAL:  'validate-referral',
+  REWARD_REFERRER:    'reward-referrer',
+  EXPIRE_REFERRALS:   'expire-stale-referrals',
+  NOTIFY_REFERRAL:    'notify-referral-event',
+} as const;
+
+// ── Referral configuration ────────────────────────────────────────────────
+
+export const REFERRAL_CONFIG = {
+  /** Wallet credit (ETB) given to the referrer when a referred user gets hired */
+  REWARD_AMOUNT: 500,
+  /** Days before a PENDING referral is considered expired */
+  EXPIRY_DAYS: 90,
+  /** Maximum referrals a single user can have active at the same time */
+  MAX_ACTIVE_REFERRALS: 50,
+  /** Redis TTL for the deduplication key (seconds) — same as EXPIRY_DAYS × 86400 */
+  DEDUP_TTL_SECONDS: 90 * 24 * 60 * 60,
 } as const;
 
 // ── Scoring thresholds ────────────────────────────────────────────────────

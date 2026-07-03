@@ -20,6 +20,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+import { JobAlertsModule } from './modules/job-alerts/job-alerts.module';
+import { ReferralsModule } from './modules/referrals/referrals.module';
 
 @Module({
   imports: [
@@ -79,6 +81,8 @@ import { TelegramModule } from './modules/telegram/telegram.module';
     ChatModule,
     UploadsModule,
     TelegramModule,
+    JobAlertsModule,
+    ReferralsModule,
   ],
 })
 export class AppModule {}

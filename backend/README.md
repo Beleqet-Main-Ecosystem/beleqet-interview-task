@@ -291,3 +291,148 @@ npm run prisma:studio   # Open Prisma Studio (DB GUI)
 npm run test            # Run unit tests
 npm run test:cov        # Test coverage report
 ```
+
+
+---
+
+## Smart Referral System
+
+A fully event-driven referral programme built as a dynamic NestJS module. Users earn an **ETB 500 wallet credit** every time someone they referred gets hired through Beleqet. The entire reward pipeline runs as a BullMQ background job chain — the HTTP request returns immediately; the rest happens asynchronously.
+
+### Architecture
+
+```
+POST /referrals/apply (new user claims a code)
+  └─► ReferralsService.applyReferral()
+        ├── Redis GET  — idempotency check (exactly-once guarantee)
+        ├── Prisma $transaction — Referral → APPLIED + EventLog
+        ├── Redis SET  — idempotency key (TTL = 90 days)
+        └── Queue ──► VALIDATE_REFERRAL
+                          │
+                          ▼
+                  ReferralsProcessor.handleValidate()
+                  ├── Guard: referral still APPLIED?
+                  ├── Guard: referrer account active?
+                  ├── EventLog: referral.validated
+                  ├── EventEmitter.emit('referral.validated')
+                  └── Notifications queue ──► IN_APP → referred user
+                          │
+                          │  (waits for application.offered event)
+                          │
+                  @OnEvent('application.offered')
+                  ReferralsService.onApplicationOffered()
+                  └── Queue ──► REWARD_REFERRER  [jobId = reward:<id>]
+                                    │
+                                    ▼
+                          ReferralsProcessor.handleReward()
+                          ├── DB check — ReferralReward exists? → skip (idempotent)
+                          ├── Redis NX lock  — dedup parallel retries
+                          └── Prisma $transaction
+                                ├── FreelancerWallet.pendingBalance += 500
+                                ├── WalletTransaction (CREDIT_PENDING)
+                                ├── ReferralReward { status: PAID }
+                                ├── Referral → COMPLETED
+                                └── EventLog: referral.rewarded
+                                        │
+                                        ▼
+                              Queue ──► NOTIFY_REFERRAL
+                                            │
+                                            ▼
+                                  ReferralsProcessor.handleNotify()
+                                  ├── IN_APP notification → referrer
+                                  └── Telegram (if connected) → referrer
+```
+
+A separate `ReferralsScheduler` runs a daily BullMQ sweep that marks stale `PENDING` referrals (past `expiresAt`) as `EXPIRED`. It holds a Redis NX leader lock so only one pod fires the sweep in a multi-replica deployment.
+
+### Idempotency guarantees
+
+| Layer | Mechanism | Protects against |
+|---|---|---|
+| HTTP `applyReferral` | Redis key `referral:apply:<userId>` | Network retries double-claiming |
+| `REWARD_REFERRER` queue | BullMQ `jobId: reward:<referralId>` | Duplicate job enqueue |
+| `handleReward` DB check | `ReferralReward.findUnique` before any write | Parallel worker race |
+| `handleReward` lock | Redis NX key `referral:reward:lock:<id>` | Retry storm collisions |
+| `generateLink` lock | Redis NX key `referral:generate:lock:<userId>` | Concurrent code creation |
+
+### API Endpoints
+
+```
+POST  /api/v1/referrals/generate      🔒  Generate (or return existing) referral link
+POST  /api/v1/referrals/apply         🔒  Claim a code after registration
+GET   /api/v1/referrals/mine          🔒  Dashboard: stats + full list
+GET   /api/v1/referrals/leaderboard       Top referrers (public, ?period=all|month|week)
+```
+
+**Generate link response**
+```json
+{
+  "code": "REF-A3B9C2D1",
+  "link": "https://beleqet.com/auth/register?ref=REF-A3B9C2D1",
+  "expiresAt": "2026-10-01T00:00:00.000Z"
+}
+```
+
+**Apply code request**
+```json
+{ "code": "REF-A3B9C2D1" }
+```
+
+**My referrals response**
+```json
+{
+  "summary": {
+    "total": 5, "pending": 2, "applied": 1,
+    "completed": 2, "expired": 0, "totalEarned": 1000
+  },
+  "referrals": [ ... ]
+}
+```
+
+**Leaderboard entry**
+```json
+{
+  "rank": 1,
+  "userId": "uuid",
+  "name": "Abel Tesfaye",
+  "avatarUrl": null,
+  "completedReferrals": 8
+}
+```
+
+### New schema models
+
+| Model | Purpose |
+|---|---|
+| `Referral` | One row per code; tracks `referrerId`, `referredUserId`, `status`, `expiresAt` |
+| `ReferralReward` | One row per paid reward; links to `Referral` and `FreelancerWallet` |
+
+`ReferralStatus` enum: `PENDING` → `APPLIED` → `COMPLETED` (happy path) or `EXPIRED` / `REJECTED`.
+
+### New environment variables
+
+No new required variables. The reward amount and expiry window are in `queues.constants.ts`:
+
+```ts
+REFERRAL_CONFIG.REWARD_AMOUNT     = 500   // ETB
+REFERRAL_CONFIG.EXPIRY_DAYS       = 90    // days until a PENDING code expires
+REFERRAL_CONFIG.MAX_ACTIVE_REFERRALS = 50 // per user
+```
+
+### Running the migration
+
+```bash
+# After pulling this branch:
+npm run prisma:generate   # regenerate Prisma client (new Referral models)
+npm run prisma:migrate    # creates referrals + referral_rewards tables
+npm run test              # run unit tests (45 new cases across service + processor)
+```
+
+### Running the tests
+
+```bash
+npm run test                                              # all tests
+npm run test -- referrals.service.spec.ts                # service only (27 cases)
+npm run test -- referrals.processor.spec.ts              # processor only (18 cases)
+npm run test:cov -- --collectCoverageFrom='**/referrals/**'  # coverage report
+```

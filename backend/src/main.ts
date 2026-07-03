@@ -63,6 +63,7 @@ async function bootstrap() {
       .addTag('wallet', 'Freelancer wallet & withdrawals')
       .addTag('notifications', 'Notification management')
       .addTag('analytics', 'Platform analytics')
+      .addTag('referrals', 'Referral programme — generate links, track earnings, leaderboard')
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
