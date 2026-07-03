@@ -12,6 +12,9 @@ RUN npm ci
 
 COPY . .
 
+# Dummy DATABASE_URL placeholder to satisfy Prisma schema validation during docker build
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 RUN npm run prisma:generate
 RUN npm run build
 
