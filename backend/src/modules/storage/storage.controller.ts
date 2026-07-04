@@ -21,15 +21,19 @@ import { Response } from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
 
+import { IsNotEmpty, IsString } from 'class-validator';
+
 /**
  * DTO for validating file upload inputs and GDPR consent.
  */
 export class UploadFileDto {
   /**
-   * String or boolean representation of the user's data processing consent.
+   * String representation of the user's data processing consent.
    * Required under GDPR guidelines.
    */
-  hasConsentedToProcessing: string | boolean;
+  @IsNotEmpty()
+  @IsString()
+  hasConsentedToProcessing: string;
 }
 
 /**
@@ -75,7 +79,7 @@ export class StorageController {
       throw new BadRequestException('No file uploaded.');
     }
 
-    const consent = body.hasConsentedToProcessing === 'true' || body.hasConsentedToProcessing === true;
+    const consent = body.hasConsentedToProcessing === 'true';
     return this.storageService.uploadFile(file, consent, user.userId);
   }
 

@@ -3,8 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation, Locale } from '../../lib/i18n';
 import { CurrencyUtil } from '../../lib/currency';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
 import { 
   ShieldCheck, 
   UploadCloud, 
@@ -349,10 +347,8 @@ export default function StorageDashboard(): React.ReactElement {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#070d0a] text-slate-100 font-sans selection:bg-[#22c55e] selection:text-white">
-      <Header />
-      
-      <main className="flex-grow py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <div className="bg-[#070d0a] text-slate-100 selection:bg-[#22c55e] selection:text-white">
+      <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         {/* Top Header & Translation Bar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-[#143022] pb-8 mb-10">
           <div>
@@ -396,16 +392,16 @@ export default function StorageDashboard(): React.ReactElement {
               <div className="bg-[#122c1d] border border-[#1b3d2b] p-4 rounded-full text-[#22c55e] mb-4">
                 <Lock className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-white tracking-wide">Developer Verification Portal</h2>
+              <h2 className="text-xl font-bold text-white tracking-wide">{t('storage.devPortal')}</h2>
               <p className="text-xs text-slate-400 mt-2">
-                Log in using default developer credentials to connect with the backend API.
+                {t('storage.devPortalSub')}
               </p>
             </div>
 
             <form onSubmit={handleDeveloperLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                  Developer Email
+                  {t('storage.emailLabel')}
                 </label>
                 <input 
                   type="email"
@@ -418,7 +414,7 @@ export default function StorageDashboard(): React.ReactElement {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                  Password
+                  {t('storage.passwordLabel')}
                 </label>
                 <input 
                   type="password"
@@ -444,12 +440,12 @@ export default function StorageDashboard(): React.ReactElement {
                 {isLoggingIn ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Verifying session...
+                    {t('storage.verifying')}
                   </>
                 ) : (
                   <>
                     <UserCheck className="w-4 h-4" />
-                    Verify and Authorize
+                    {t('storage.authorizeButton')}
                   </>
                 )}
               </button>
@@ -461,13 +457,13 @@ export default function StorageDashboard(): React.ReactElement {
             <div className="bg-[#0b1710] border border-[#143022] rounded-2xl px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-300">
                 <span className="w-2.5 h-2.5 bg-[#22c55e] rounded-full animate-ping"></span>
-                <span>Active Session: <strong>admin@beleqet.com</strong></span>
+                <span>{t('storage.activeSession')} <strong>admin@beleqet.com</strong></span>
               </div>
               <button 
                 onClick={handleLogout}
                 className="text-xs font-semibold uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors border border-red-900/30 hover:border-red-900/60 bg-red-950/20 px-4 py-2 rounded-xl"
               >
-                Terminate Session
+                {t('storage.terminateSession')}
               </button>
             </div>
 
@@ -478,7 +474,7 @@ export default function StorageDashboard(): React.ReactElement {
               <div className="lg:col-span-7 bg-[#0c1811]/90 backdrop-blur-md border border-[#1b3d2b] rounded-3xl p-6 sm:p-8 shadow-xl relative group">
                 <h2 className="text-xl font-bold text-white mb-6 tracking-wide flex items-center gap-2.5">
                   <UploadCloud className="w-5 h-5 text-[#22c55e]" />
-                  Secure Upload Zone
+                  {t('storage.uploadHeader')}
                 </h2>
 
                 <form onSubmit={handleUploadSubmit} className="space-y-6">
@@ -564,7 +560,7 @@ export default function StorageDashboard(): React.ReactElement {
                 <div>
                   <h2 className="text-xl font-bold text-white mb-4 tracking-wide flex items-center gap-2.5">
                     <Coins className="w-5 h-5 text-[#22c55e]" />
-                    Storage Fee Calculator
+                    {t('storage.calculatorHeader')}
                   </h2>
                   <p className="text-xs text-slate-400 leading-relaxed mb-6">
                     {t('storage.premiumDesc')}
@@ -579,8 +575,8 @@ export default function StorageDashboard(): React.ReactElement {
                     </div>
                     <div className="border-t border-[#143022] pt-4">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Equivalent Cents/Santim:</span>
-                        <span className="font-mono text-slate-200">{baseFeeCents} units</span>
+                        <span className="text-slate-400">{t('storage.equivalentUnits')}</span>
+                        <span className="font-mono text-slate-200">{baseFeeCents} {t('storage.units')}</span>
                       </div>
                     </div>
                   </div>
@@ -638,11 +634,11 @@ export default function StorageDashboard(): React.ReactElement {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-[#143022] text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                        <th className="py-4 px-4">Filename</th>
+                        <th className="py-4 px-4">{t('storage.filenameHeader')}</th>
                         <th className="py-4 px-4">{t('storage.fileKey')}</th>
                         <th className="py-4 px-4">{t('storage.fileSize')}</th>
                         <th className="py-4 px-4">{t('storage.fileStatus')}</th>
-                        <th className="py-4 px-4 text-right">Actions</th>
+                        <th className="py-4 px-4 text-right">{t('storage.actionsHeader')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#143022]/40 text-sm">
@@ -705,9 +701,7 @@ export default function StorageDashboard(): React.ReactElement {
             </div>
           </div>
         )}
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }

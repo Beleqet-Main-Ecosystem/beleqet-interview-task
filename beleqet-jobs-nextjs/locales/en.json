@@ -26,6 +26,20 @@
     "loadingLink": "Generating link...",
     "errorMime": "Unsupported file type. Please select common images or document formats.",
     "errorSizeImage": "Image size exceeds the maximum limit of 5MB.",
-    "errorSizeDoc": "Document size exceeds the maximum limit of 10MB."
+    "errorSizeDoc": "Document size exceeds the maximum limit of 10MB.",
+    "uploadHeader": "Secure Upload Zone",
+    "calculatorHeader": "Storage Fee Calculator",
+    "activeSession": "Active Session:",
+    "terminateSession": "Terminate Session",
+    "equivalentUnits": "Equivalent Cents/Santim:",
+    "units": "units",
+    "filenameHeader": "Filename",
+    "actionsHeader": "Actions",
+    "devPortal": "Developer Verification Portal",
+    "devPortalSub": "Log in using default developer credentials to connect with the backend API.",
+    "emailLabel": "Developer Email",
+    "passwordLabel": "Password",
+    "verifying": "Verifying session...",
+    "authorizeButton": "Verify and Authorize"
   }
 }

@@ -69,9 +69,9 @@ describe('StorageController', () => {
       expect(mockStorageService.uploadFile).toHaveBeenCalledWith(file, true, 'user-id-123');
     });
 
-    it('should correctly handle boolean representation of consent', async () => {
+    it('should correctly handle negative representation of consent', async () => {
       const file = mockFile();
-      const dto: UploadFileDto = { hasConsentedToProcessing: true };
+      const dto: UploadFileDto = { hasConsentedToProcessing: 'false' };
       const expectedResult = { id: 'file-id', key: 'documents/uuid.pdf' };
 
       mockStorageService.uploadFile.mockResolvedValue(expectedResult);
@@ -79,7 +79,7 @@ describe('StorageController', () => {
       const result = await controller.uploadFile(file, dto, mockUserPayload);
 
       expect(result).toEqual(expectedResult);
-      expect(mockStorageService.uploadFile).toHaveBeenCalledWith(file, true, 'user-id-123');
+      expect(mockStorageService.uploadFile).toHaveBeenCalledWith(file, false, 'user-id-123');
     });
   });
 

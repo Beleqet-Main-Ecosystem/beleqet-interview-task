@@ -26,6 +26,20 @@
     "loadingLink": "ሊንክ በመፍጠር ላይ...",
     "errorMime": "የማይደገፍ የፋይል አይነት ነው። እባክዎ ምስሎችን ወይም የተለመዱ የሰነድ አይነቶችን ይምረጡ።",
     "errorSizeImage": "የምስል መጠን ከተፈቀደው 5MB በላይ መሆን አይችልም።",
-    "errorSizeDoc": "የሰነድ መጠን ከተፈቀደው 10MB በላይ መሆን አይችልም።"
+    "errorSizeDoc": "የሰነድ መጠን ከተፈቀደው 10MB በላይ መሆን አይችልም።",
+    "uploadHeader": "ደህንነቱ የተጠበቀ ፋይል መጫኛ",
+    "calculatorHeader": "የክፍያ ማስያ ካልኩሌተር",
+    "activeSession": "ገባሪ ክፍለ-ጊዜ:",
+    "terminateSession": "ክፍለ-ጊዜውን አቋርጥ",
+    "equivalentUnits": "ተመጣጣኝ ሳንቲም/ሳንቲሞች:",
+    "units": "ዩኒቶች",
+    "filenameHeader": "የፋይል ስም",
+    "actionsHeader": "ተግባራት",
+    "devPortal": "የገንቢ ማረጋገጫ ፖርታል",
+    "devPortalSub": "ከኤፒአይ (API) ጋር ለመገናኘት ቀድሞ የተዘጋጁትን የገንቢ መለያዎች ይጠቀሙ።",
+    "emailLabel": "የገንቢ ኢሜይል",
+    "passwordLabel": "የይለፍ ቃል",
+    "verifying": "ክፍለ-ጊዜውን በማረጋገጥ ላይ...",
+    "authorizeButton": "አረጋግጥ እና ፍቀድ"
   }
 }
