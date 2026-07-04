@@ -1,9 +1,33 @@
 import Link from "next/link";
-import { jobs } from "@/lib/mockData";
+import { getJobs, ApiJob } from "@/lib/api";
+import { jobs as mockJobs } from "@/lib/mockData";
 import JobCard from "./JobCard";
 
-export default function FeaturedJobs() {
-  const featured = jobs.filter((j) => j.featured);
+function toDisplayJob(job: ApiJob) {
+  return {
+    id: job.id,
+    title: job.title,
+    company: job.company?.name ?? "Unknown",
+    location: job.location,
+    type: job.type as ApiJob["type"],
+    category: job.category?.slug ?? "",
+    postedAgo: new Date(job.createdAt).toLocaleDateString(),
+    featured: job.featured,
+    description: job.description,
+    tags: job.tags ?? [],
+  };
+}
+
+export default async function FeaturedJobs() {
+  let featured;
+  try {
+    const res = await getJobs({ limit: 5 });
+    featured = res.items.filter((j) => j.featured).slice(0, 5).map(toDisplayJob);
+    if (featured.length === 0) featured = res.items.slice(0, 5).map(toDisplayJob);
+  } catch {
+    // Fall back to mock data if API is not reachable
+    featured = mockJobs.filter((j) => j.featured);
+  }
 
   return (
     <section className="bg-white border-y border-border">

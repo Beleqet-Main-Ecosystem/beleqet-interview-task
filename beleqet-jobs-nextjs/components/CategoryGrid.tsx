@@ -9,7 +9,8 @@ import {
   MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
-import { categories } from "@/lib/mockData";
+import { getCategories } from "@/lib/api";
+import { categories as mockCategories } from "@/lib/mockData";
 
 const iconMap: Record<string, LucideIcon> = {
   laptop: Laptop,
@@ -21,7 +22,32 @@ const iconMap: Record<string, LucideIcon> = {
   "more-horizontal": MoreHorizontal,
 };
 
-export default function CategoryGrid() {
+// Map API category slugs to icons
+const slugIconMap: Record<string, string> = {
+  "it-software": "laptop",
+  "marketing": "megaphone",
+  "finance": "landmark",
+  "health": "heart-pulse",
+  "education": "graduation-cap",
+  "engineering": "cog",
+};
+
+export default async function CategoryGrid() {
+  let categories: { id: string; label: string; count: string; icon: string }[];
+
+  try {
+    const apiCategories = await getCategories();
+    categories = apiCategories.map((cat) => ({
+      id: cat.slug,
+      label: cat.label,
+      count: cat._count?.jobs?.toLocaleString() ?? "0",
+      icon: slugIconMap[cat.slug] ?? "more-horizontal",
+    }));
+    if (categories.length === 0) categories = mockCategories;
+  } catch {
+    categories = mockCategories;
+  }
+
   return (
     <section className="container-page py-14">
       <div className="flex items-end justify-between mb-6">

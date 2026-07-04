@@ -1,17 +1,63 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Clock, Building2, ArrowLeft } from "lucide-react";
-import { jobs } from "@/lib/mockData";
+import { getJob, getJobs } from "@/lib/api";
+import { jobs as mockJobs } from "@/lib/mockData";
 
-export function generateStaticParams() {
-  return jobs.map((job) => ({ id: job.id }));
+export async function generateStaticParams() {
+  try {
+    const res = await getJobs({ limit: 100 });
+    return res.items.map((job) => ({ id: job.id }));
+  } catch {
+    return mockJobs.map((job) => ({ id: job.id }));
+  }
 }
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
-  const job = jobs.find((j) => j.id === params.id);
+export default async function JobDetailPage({ params }: { params: { id: string } }) {
+  let job;
+  let related: typeof mockJobs = [];
+
+  try {
+    job = await getJob(params.id);
+    const res = await getJobs({ category: job.category?.slug ?? "", limit: 4 });
+    related = res.items
+      .filter((j) => j.id !== job!.id)
+      .slice(0, 3)
+      .map((j) => ({
+        id: j.id,
+        title: j.title,
+        company: j.company?.name ?? "Unknown",
+        location: j.location,
+        type: j.type as typeof mockJobs[0]["type"],
+        category: j.category?.slug ?? "",
+        postedAgo: new Date(j.createdAt).toLocaleDateString(),
+        featured: j.featured,
+        description: j.description,
+        tags: j.tags ?? [],
+      }));
+  } catch {
+    // Fall back to mock data
+    const mockJob = mockJobs.find((j) => j.id === params.id);
+    if (!mockJob) notFound();
+    job = {
+      id: mockJob.id,
+      title: mockJob.title,
+      location: mockJob.location,
+      type: mockJob.type,
+      featured: mockJob.featured ?? false,
+      description: mockJob.description ?? "",
+      createdAt: new Date().toISOString(),
+      company: { id: "", name: mockJob.company },
+      category: { id: "", slug: mockJob.category, label: mockJob.category },
+      tags: mockJob.tags ?? [],
+    };
+    related = mockJobs.filter((j) => j.category === mockJob.category && j.id !== mockJob.id).slice(0, 3);
+  }
+
   if (!job) notFound();
 
-  const related = jobs.filter((j) => j.category === job.category && j.id !== job.id).slice(0, 3);
+  const companyName = "name" in job.company ? job.company.name : (job.company as { name: string }).name;
+  const postedAgo = new Date(job.createdAt).toLocaleDateString();
 
   return (
     <div className="container-page py-10">
@@ -28,13 +74,13 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               </span>
               <div>
                 <h1 className="text-xl sm:text-2xl font-extrabold text-ink leading-snug">{job.title}</h1>
-                <p className="text-muted mt-1">{job.company}</p>
+                <p className="text-muted mt-1">{companyName}</p>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted">
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> {job.location}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> {job.postedAgo}
+                    <Clock className="h-3.5 w-3.5" /> {postedAgo}
                   </span>
                   <span className="rounded-full bg-brandGreen/10 text-brandGreen font-semibold px-2.5 py-1">
                     {job.type}
@@ -48,9 +94,9 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               <p className="text-sm text-muted leading-relaxed">{job.description}</p>
             </div>
 
-            {job.tags && (
+            {job.tags && job.tags.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2">
-                {job.tags.map((tag) => (
+                {job.tags.map((tag: string) => (
                   <span key={tag} className="text-xs font-medium text-muted bg-pageBg border border-border rounded-full px-3 py-1">
                     {tag}
                   </span>

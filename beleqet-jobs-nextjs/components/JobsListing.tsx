@@ -3,12 +3,37 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, MapPin, SlidersHorizontal } from "lucide-react";
-import { jobs, categories } from "@/lib/mockData";
+import { categories as mockCategories } from "@/lib/mockData";
 import JobCard from "@/components/JobCard";
+
+type DisplayJob = {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  category: string;
+  postedAgo: string;
+  featured?: boolean;
+  description?: string;
+  tags?: string[];
+};
+
+type DisplayCategory = {
+  id: string;
+  label: string;
+  count: string;
+  icon: string;
+};
+
+interface JobsListingProps {
+  initialJobs: DisplayJob[];
+  initialCategories: DisplayCategory[];
+}
 
 const jobTypes = ["Full Time", "Part Time", "Remote", "Hybrid", "On-site", "Contract"];
 
-export default function JobsListing() {
+export default function JobsListing({ initialJobs, initialCategories }: JobsListingProps) {
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
@@ -16,8 +41,10 @@ export default function JobsListing() {
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
   const [type, setType] = useState<string>("");
 
+  const categories = initialCategories.length > 0 ? initialCategories : mockCategories;
+
   const filtered = useMemo(() => {
-    return jobs.filter((job) => {
+    return initialJobs.filter((job) => {
       const matchesQuery =
         !query ||
         job.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -27,7 +54,7 @@ export default function JobsListing() {
       const matchesType = !type || job.type === type;
       return matchesQuery && matchesLocation && matchesCategory && matchesType;
     });
-  }, [query, location, category, type]);
+  }, [initialJobs, query, location, category, type]);
 
   return (
     <div className="container-page py-10">
