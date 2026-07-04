@@ -5,24 +5,24 @@
 ## Quick Start
 
 ```bash
-# 1. Start Postgres + Redis
-docker-compose up -d   # run from the project root (one level up)
+# From monorepo root — start Postgres + Redis
+docker compose up -d db redis
 
-# 2. Set up environment
+# Then in this directory (backend/)
 cp .env.example .env
 # Edit .env — fill in DATABASE_URL, JWT secrets, OPENAI_API_KEY
 
-# 3. Install dependencies
+# Install dependencies
 npm install
 
-# 4. Generate Prisma client + run migrations
+# Generate Prisma client + sync schema
 npm run prisma:generate
-npm run prisma:migrate
+npx prisma db push
 
-# 5. Seed demo data
+# Seed demo data
 npm run prisma:seed
 
-# 6. Start in dev mode (hot reload)
+# Start in dev mode (hot reload)
 npm run start:dev
 ```
 

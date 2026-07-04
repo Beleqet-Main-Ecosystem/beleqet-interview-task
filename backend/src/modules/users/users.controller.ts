@@ -1,10 +1,11 @@
 // users.controller.ts
-import { Controller, Get, Patch, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
 import { UpdateUserDto, CreateCompanyDto } from './dto/update-user.dto';
+import { UpsertCvDto } from './dto/upsert-cv.dto';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -18,6 +19,14 @@ export class UsersController {
 
   @Patch('profile')
   update(@CurrentUser() u: CurrentUserPayload, @Body() dto: UpdateUserDto) { return this.svc.update(u.userId, dto); }
+
+  @Get('cv')
+  getCv(@CurrentUser() u: CurrentUserPayload) { return this.svc.getCv(u.userId); }
+
+  @Put('cv')
+  upsertCv(@CurrentUser() u: CurrentUserPayload, @Body() dto: UpsertCvDto) {
+    return this.svc.upsertCv(u.userId, dto.cvData);
+  }
 
   @Get('company')
   getCompany(@CurrentUser() u: CurrentUserPayload) { return this.svc.getCompany(u.userId); }

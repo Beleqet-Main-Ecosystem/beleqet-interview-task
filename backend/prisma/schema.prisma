@@ -29,6 +29,7 @@ model User {
   location              String?
   portfolioUrl          String?
   skills                String[]            @default([])
+  cvData                Json?
   applications          Application[]
   bids                  Bid[]
   candidateScores       CandidateScore[]
@@ -42,6 +43,7 @@ model User {
   notifications         Notification[]
   refreshTokens         RefreshToken[]
   verificationTokens    VerificationToken[]
+  savedJobs             SavedJob[]
 
   @@map("users")
 }
@@ -89,6 +91,7 @@ model Company {
   linkedinUrl   String?
   location      String?
   twitterUrl    String?
+  subscriptionPlan SubscriptionPlan @default(BASIC)
   user          User     @relation(fields: [userId], references: [id])
   jobs          Job[]
 
@@ -141,6 +144,7 @@ model Job {
   yearsOfExperience String?
   applications      Application[]
   questions         JobQuestion[]
+  savedBy           SavedJob[]
   category          JobCategory   @relation(fields: [categoryId], references: [id])
   company           Company       @relation(fields: [companyId], references: [id])
 
@@ -444,6 +448,32 @@ model Message {
   @@map("messages")
 }
 
+model ContactInquiry {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String
+  message   String
+  plan      String?
+  status    String   @default("NEW")
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@map("contact_inquiries")
+}
+
+model SavedJob {
+  id        String   @id @default(uuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@map("saved_jobs")
+}
+
 enum UserRole {
   ADMIN
   EMPLOYER
@@ -464,6 +494,12 @@ enum JobStatus {
   PUBLISHED
   CLOSED
   ARCHIVED
+}
+
+enum SubscriptionPlan {
+  BASIC
+  FEATURED
+  ENTERPRISE
 }
 
 enum ApplicationStatus {

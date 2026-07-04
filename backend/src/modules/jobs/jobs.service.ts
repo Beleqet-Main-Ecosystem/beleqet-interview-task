@@ -1,21 +1,42 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateJobDto, QueryJobsDto } from './dto/create-job.dto';
 
 @Injectable()
 export class JobsService {
+  private readonly planLimits: Record<string, number> = {
+    BASIC: 1,
+    FEATURED: 5,
+    ENTERPRISE: 9999,
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(employerId: string, dto: CreateJobDto) {
     const company = await this.prisma.company.findUnique({ where: { userId: employerId } });
     if (!company) throw new ForbiddenException('Create a company profile before posting jobs');
 
-    const data: any = { ...dto, companyId: company.id, status: dto.status || 'PUBLISHED' };
-    if (data.deadline) data.deadline = new Date(data.deadline);
-    if (data.expiryDate) data.expiryDate = new Date(data.expiryDate);
+    const publishedCount = await this.prisma.job.count({
+      where: { companyId: company.id, status: 'PUBLISHED' },
+    });
+    const limit = this.planLimits[company.subscriptionPlan] ?? 1;
+    if (publishedCount >= limit) {
+      throw new ForbiddenException(
+        `Your ${company.subscriptionPlan} plan allows up to ${limit} active job(s). Upgrade your plan to post more.`,
+      );
+    }
+
+    const data: Record<string, unknown> = { ...dto, companyId: company.id, status: dto.status || 'PUBLISHED' };
+    if (company.subscriptionPlan === 'BASIC') {
+      data.featured = false;
+    } else if (dto.featured && company.subscriptionPlan !== 'FEATURED' && company.subscriptionPlan !== 'ENTERPRISE') {
+      data.featured = false;
+    }
+    if (data.deadline) data.deadline = new Date(data.deadline as string);
+    if (data.expiryDate) data.expiryDate = new Date(data.expiryDate as string);
 
     return this.prisma.job.create({
-      data,
+      data: data as never,
       include: { company: true, category: true },
     });
   }
@@ -23,7 +44,17 @@ export class JobsService {
   async getCategories() {
     return this.prisma.jobCategory.findMany({
       orderBy: { label: 'asc' },
+      include: { _count: { select: { jobs: true } } },
     });
+  }
+
+  async getStats() {
+    const [jobs, companies, seekers] = await Promise.all([
+      this.prisma.job.count({ where: { status: 'PUBLISHED' } }),
+      this.prisma.company.count(),
+      this.prisma.user.count({ where: { role: 'JOB_SEEKER' } }),
+    ]);
+    return { jobs, companies, seekers };
   }
 
   async findAll(query: QueryJobsDto) {
@@ -83,5 +114,41 @@ export class JobsService {
       include: { category: true, _count: { select: { applications: true } } },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async getSavedJobs(userId: string) {
+    const rows = await this.prisma.savedJob.findMany({
+      where: { userId },
+      include: {
+        job: { include: { company: true, category: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map((r) => r.job).filter(Boolean);
+  }
+
+  async saveJob(userId: string, jobId: string) {
+    const job = await this.prisma.job.findFirst({ where: { id: jobId, status: 'PUBLISHED' } });
+    if (!job) throw new NotFoundException('Job not found');
+
+    const existing = await this.prisma.savedJob.findUnique({
+      where: { userId_jobId: { userId, jobId } },
+    });
+    if (existing) throw new ConflictException('Job already saved');
+
+    await this.prisma.savedJob.create({ data: { userId, jobId } });
+    return { saved: true, jobId };
+  }
+
+  async unsaveJob(userId: string, jobId: string) {
+    await this.prisma.savedJob.deleteMany({ where: { userId, jobId } });
+    return { saved: false, jobId };
+  }
+
+  async isJobSaved(userId: string, jobId: string) {
+    const row = await this.prisma.savedJob.findUnique({
+      where: { userId_jobId: { userId, jobId } },
+    });
+    return { saved: !!row };
   }
 }

@@ -1,5 +1,11 @@
 // dto/update-user.dto.ts
-import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsEnum } from 'class-validator';
+
+export enum SubscriptionPlan {
+  BASIC = 'BASIC',
+  FEATURED = 'FEATURED',
+  ENTERPRISE = 'ENTERPRISE',
+}
 
 export class UpdateUserDto {
   @IsOptional() @IsString() firstName?: string;
@@ -35,4 +41,5 @@ export class CreateCompanyDto {
   @IsOptional() @IsString() coverImageUrl?: string;
   @IsOptional() @IsString({ each: true }) benefits?: string[];
   @IsOptional() foundedYear?: number;
+  @IsOptional() @IsEnum(SubscriptionPlan) subscriptionPlan?: SubscriptionPlan;
 }

@@ -9,7 +9,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 4000);
@@ -17,10 +17,15 @@ async function bootstrap() {
 
   // ── Security ──────────────────────────────────────────────────────────────
   app.use(helmet());
+  const corsOrigins = configService
+    .get<string>('FRONTEND_URL', 'http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL', 'http://localhost:3000'),
+    origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
   // ── Global prefix ─────────────────────────────────────────────────────────
@@ -63,6 +68,7 @@ async function bootstrap() {
       .addTag('wallet', 'Freelancer wallet & withdrawals')
       .addTag('notifications', 'Notification management')
       .addTag('analytics', 'Platform analytics')
+      .addTag('contact', 'Contact & sales inquiries')
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
@@ -79,7 +85,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  const logger = new Logger('Bootstrap');
-  logger.error('Fatal startup error', err);
+  console.error('Fatal startup error:', err);
   process.exit(1);
 });

@@ -32,6 +32,20 @@ export class JobsController {
     return this.svc.getCategories();
   }
 
+  @Get('saved')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List saved jobs for the current user' })
+  savedJobs(@CurrentUser() user: CurrentUserPayload) {
+    return this.svc.getSavedJobs(user.userId);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Platform stats for homepage (public)' })
+  getStats() {
+    return this.svc.getStats();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.svc.findOne(id);
@@ -60,5 +74,29 @@ export class JobsController {
   @ApiBearerAuth()
   remove(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
     return this.svc.remove(id, user.userId);
+  }
+
+  @Post(':id/save')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Save a job to your bookmarks' })
+  saveJob(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.svc.saveJob(user.userId, id);
+  }
+
+  @Delete(':id/save')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Remove a saved job' })
+  unsaveJob(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.svc.unsaveJob(user.userId, id);
+  }
+
+  @Get(':id/saved')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Check if a job is saved by the current user' })
+  isSaved(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.svc.isJobSaved(user.userId, id);
   }
 }
