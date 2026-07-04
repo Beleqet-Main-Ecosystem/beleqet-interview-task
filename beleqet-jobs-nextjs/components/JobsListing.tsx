@@ -6,18 +6,9 @@ import { Search, MapPin, SlidersHorizontal } from "lucide-react";
 import { categories as mockCategories } from "@/lib/mockData";
 import JobCard from "@/components/JobCard";
 
-type DisplayJob = {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  type: string;
-  category: string;
-  postedAgo: string;
-  featured?: boolean;
-  description?: string;
-  tags?: string[];
-};
+import type { Job } from "@/lib/mockData";
+
+type DisplayJob = Job;
 
 type DisplayCategory = {
   id: string;
