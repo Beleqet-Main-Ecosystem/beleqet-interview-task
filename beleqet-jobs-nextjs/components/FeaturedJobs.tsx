@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { getJobs, ApiJob } from "@/lib/api";
+import type { Job } from "@/lib/mockData";
 import { jobs as mockJobs } from "@/lib/mockData";
 import JobCard from "./JobCard";
 
-function toDisplayJob(job: ApiJob) {
+function toDisplayJob(job: ApiJob): Job {
   return {
     id: job.id,
     title: job.title,
     company: job.company?.name ?? "Unknown",
     location: job.location,
-    type: job.type as ApiJob["type"],
+    type: job.type as Job["type"],
     category: job.category?.slug ?? "",
     postedAgo: new Date(job.createdAt).toLocaleDateString(),
     featured: job.featured,

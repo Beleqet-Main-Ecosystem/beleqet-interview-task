@@ -1,19 +1,19 @@
 import { Suspense } from "react";
 import JobsListing from "@/components/JobsListing";
 import { getJobs, getCategories, ApiJob, ApiCategory } from "@/lib/api";
-import { jobs as mockJobs, categories as mockCategories } from "@/lib/mockData";
+import { jobs as mockJobs, categories as mockCategories, type Job } from "@/lib/mockData";
 
 export const metadata = {
   title: "Find Jobs | Beleqet Jobs",
 };
 
-function toDisplayJob(job: ApiJob) {
+function toDisplayJob(job: ApiJob): Job {
   return {
     id: job.id,
     title: job.title,
     company: job.company?.name ?? "Unknown",
     location: job.location,
-    type: job.type,
+    type: job.type as Job["type"],
     category: job.category?.slug ?? "",
     postedAgo: new Date(job.createdAt).toLocaleDateString(),
     featured: job.featured,
