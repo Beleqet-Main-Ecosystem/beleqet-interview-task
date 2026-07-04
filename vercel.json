@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd beleqet-jobs-nextjs && npm install && npm run build",
-  "outputDirectory": "beleqet-jobs-nextjs/.next",
-  "installCommand": "echo 'skip root install'",
-  "framework": "nextjs"
-}
