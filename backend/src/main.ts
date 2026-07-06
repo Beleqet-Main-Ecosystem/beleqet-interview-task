@@ -1,10 +1,12 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, ClassSerializerInterceptor, Logger } from '@nestjs/common';
+import { HttpAdapterHost } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { ErrorRecurrenceTrackerService } from './common/filters/error-recurrence-tracker.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
@@ -40,7 +42,12 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   // ── Exception filter ──────────────────────────────────────────────────────
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // AllExceptionsFilter needs HttpAdapterHost from the DI container.
+  // ErrorRecurrenceTrackerService is instantiated as a singleton here;
+  // the same instance is also exposed via the AdminModule for dashboard queries.
+  const httpAdapterHost = app.get(HttpAdapterHost);
+  const recurrenceTracker = new ErrorRecurrenceTrackerService();
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost, recurrenceTracker));
 
   // ── Logging interceptor ───────────────────────────────────────────────────
   app.useGlobalInterceptors(new LoggingInterceptor());
@@ -64,6 +71,7 @@ async function bootstrap() {
       .addTag('notifications', 'Notification management')
       .addTag('analytics', 'Platform analytics')
       .addTag('referrals', 'Referral programme — generate links, track earnings, leaderboard')
+      .addTag('db-index-master', 'DB Index Master — query analysis & index health (admin only)')
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);

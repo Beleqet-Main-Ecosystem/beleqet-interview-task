@@ -46,6 +46,7 @@ model User {
   referralsGiven        Referral[]          @relation("ReferrerUser")
   referralsReceived     Referral[]          @relation("ReferredUser")
   referralRewards       ReferralReward[]
+  payments              Payment[]
 
   @@map("users")
 }
@@ -506,6 +507,57 @@ model ReferralReward {
   @@map("referral_rewards")
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Global Payment Gateway (Task Global-Payments-001 & 002)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Stores every payment transaction (Stripe or PayPal) initiated via the
+// Beleqet platform.
+//
+// GDPR notes:
+//  - No raw PII stored here (no card numbers, email, name).
+//  - userId is a UUID reference to the users table.
+//  - metadata is sanitised before insert (PII keys stripped in services).
+//
+// Multi-currency: `currency` is ISO 4217. `amount` is in smallest unit
+// (cents/fils/pence) for Stripe; stored as-is for PayPal (decimal × 100).
+model Payment {
+  id                 String        @id @default(uuid())
+  /// UUID of the Beleqet user who initiated this payment
+  userId             String
+  /// Payment provider: STRIPE or PAYPAL
+  provider           PaymentProvider
+  /// Provider-side payment / order ID (pi_… for Stripe, alphanumeric for PayPal)
+  providerPaymentId  String        @unique
+  /// Amount in smallest currency unit (e.g. cents for USD)
+  amount             Int
+  /// ISO 4217 currency code (e.g. USD, EUR, ETB)
+  currency           String        @default("USD")
+  /// Current lifecycle status
+  status             PaymentStatus @default(PENDING)
+  /// Human-readable description (stripped of PII before storage)
+  description        String?
+  /// Sanitised key-value metadata (no PII keys)
+  metadata           Json?
+  /// Timestamp when this payment was refunded (null if not refunded)
+  refundedAt         DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Index for looking up all payments by a user (dashboard, history)
+  @@index([userId, createdAt])
+  /// Index for admin filtering by status + provider
+  @@index([status, provider])
+  /// Index for webhook event processing by providerPaymentId
+  @@index([providerPaymentId])
+  /// Index for currency-based reporting (multi-currency analytics)
+  @@index([currency, status])
+
+  @@map("payments")
+}
+
 enum UserRole {
   ADMIN
   EMPLOYER
@@ -597,4 +649,19 @@ enum ReferralStatus {
   COMPLETED
   EXPIRED
   REJECTED
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  CANCELLED
 }

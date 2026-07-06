@@ -22,6 +22,8 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { JobAlertsModule } from './modules/job-alerts/job-alerts.module';
 import { ReferralsModule } from './modules/referrals/referrals.module';
+import { DbIndexMasterModule } from './modules/db-index-master/db-index-master.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -83,6 +85,8 @@ import { ReferralsModule } from './modules/referrals/referrals.module';
     TelegramModule,
     JobAlertsModule,
     ReferralsModule,
+    DbIndexMasterModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {}
