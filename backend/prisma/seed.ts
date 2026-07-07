@@ -50,7 +50,91 @@ async function main() {
   ]);
   console.log('✅ Freelance categories created');
 
-  console.log('\n🎉 Database seeded successfully with Production Categories!');
+  // ── Subscription Plans ─────────────────────────────────────────────────────
+  const plans = [
+    {
+      slug: 'free',
+      name: { en: 'Free Plan', am: 'ነፃ ዕቅድ' },
+      description: { en: 'Basic plan to test Beleqet', am: 'መሠረታዊ ዕቅድ' },
+      features: ['Post up to 2 jobs', 'Standard candidate screening', 'In-app notifications'],
+      limits: { maxJobs: 2 },
+      prices: [
+        { currency: 'ETB', amount: 0, interval: 'MONTHLY' },
+        { currency: 'ETB', amount: 0, interval: 'YEARLY' },
+        { currency: 'USD', amount: 0, interval: 'MONTHLY' },
+        { currency: 'USD', amount: 0, interval: 'YEARLY' },
+      ],
+    },
+    {
+      slug: 'pro',
+      name: { en: 'Pro Plan', am: 'ፕሮ ዕቅድ' },
+      description: { en: 'For growing teams and professional hiring', am: 'ለሚያድጉ ቡድኖች' },
+      features: ['Post up to 15 jobs', 'Priority AI candidate scoring', 'Multi-channel notifications (Email, SMS, Push)', 'Dedicated support'],
+      limits: { maxJobs: 15 },
+      prices: [
+        { currency: 'ETB', amount: 99900, interval: 'MONTHLY' },
+        { currency: 'ETB', amount: 999900, interval: 'YEARLY' },
+        { currency: 'USD', amount: 1900, interval: 'MONTHLY' },
+        { currency: 'USD', amount: 19000, interval: 'YEARLY' },
+      ],
+    },
+    {
+      slug: 'enterprise',
+      name: { en: 'Enterprise Plan', am: 'ኢንተርፕራይዝ ዕቅድ' },
+      description: { en: 'Unlimited capabilities for large scale recruitment', am: 'ለከፍተኛ ቅጥር' },
+      features: ['Unlimited jobs', 'Advanced custom screening templates', 'API access', 'Priority channels', 'Account manager'],
+      limits: { maxJobs: 999999 },
+      prices: [
+        { currency: 'ETB', amount: 499900, interval: 'MONTHLY' },
+        { currency: 'ETB', amount: 4999900, interval: 'YEARLY' },
+        { currency: 'USD', amount: 9900, interval: 'MONTHLY' },
+        { currency: 'USD', amount: 99900, interval: 'YEARLY' },
+      ],
+    },
+  ];
+
+  for (const planData of plans) {
+    const plan = await prisma.subscriptionPlan.upsert({
+      where: { slug: planData.slug },
+      update: {
+        name: planData.name,
+        description: planData.description,
+        features: planData.features,
+        limits: planData.limits,
+      },
+      create: {
+        slug: planData.slug,
+        name: planData.name,
+        description: planData.description,
+        features: planData.features,
+        limits: planData.limits,
+      },
+    });
+
+    for (const priceData of planData.prices) {
+      await prisma.subscriptionPlanPrice.upsert({
+        where: {
+          planId_currency_interval: {
+            planId: plan.id,
+            currency: priceData.currency,
+            interval: priceData.interval as any,
+          },
+        },
+        update: {
+          amount: priceData.amount,
+        },
+        create: {
+          planId: plan.id,
+          currency: priceData.currency,
+          amount: priceData.amount,
+          interval: priceData.interval as any,
+        },
+      });
+    }
+  }
+  console.log('✅ Subscription plans & prices created');
+
+  console.log('\n🎉 Database seeded successfully!');
 }
 
 main()

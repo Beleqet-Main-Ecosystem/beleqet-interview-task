@@ -1,23 +1,41 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateJobDto, QueryJobsDto } from './dto/create-job.dto';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class JobsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(employerId: string, dto: CreateJobDto) {
     const company = await this.prisma.company.findUnique({ where: { userId: employerId } });
     if (!company) throw new ForbiddenException('Create a company profile before posting jobs');
 
+    // Enforce subscription limits
+    await this.subscriptionsService.checkUserLimit(employerId, 'maxJobs');
+
     const data: any = { ...dto, companyId: company.id, status: dto.status || 'PUBLISHED' };
     if (data.deadline) data.deadline = new Date(data.deadline);
     if (data.expiryDate) data.expiryDate = new Date(data.expiryDate);
 
-    return this.prisma.job.create({
+    const createdJob = await this.prisma.job.create({
       data,
       include: { company: true, category: true },
     });
+
+    // Trigger auto-notification event
+    this.eventEmitter.emit('job.created', {
+      userId: employerId,
+      jobId: createdJob.id,
+      title: createdJob.title,
+    });
+
+    return createdJob;
   }
 
   async getCategories() {
