@@ -9,6 +9,12 @@
 body {
   background: #F5F7FA;
   color: #1E293B;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark body {
+  background: #020617;
+  color: #e2e8f0;
 }
 
 @layer utilities {
